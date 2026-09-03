@@ -1,39 +1,35 @@
-  <?php
-if ( isset($_GET['binfo']) && $_GET['binfo'] != "" )
-    { $binfo = " ".$_GET['binfo']; }
-else die;
+<?php
 
+use Wolfcast\BrowserDetection;
 
 require_once('detector.php');
 
-$object = new BrowserDetection($binfo);
+$binfo = trim($_GET['binfo'] ?? '');
+if ($binfo === '') exit;
 
-$browserName = $object->getName();
-$browserVer = $object->getVersion(); 
-$OSver = $object->getPlatformVersion(); 
-$OS = $object->getPlatform();
-$bot = $object->isRobot(); 
+$browser     = new BrowserDetection();
+$browser->setUserAgent($binfo);
+$browserName = $browser->getName();
+$browserVer  = $browser->getVersion();
+$OS          = $browser->getPlatform();
+$OSver       = $browser->getPlatformVersion();
+$isBot       = $browser->isRobot();
+$botInt      = ($isBot === 'true' || $isBot === true) ? 1 : 0;
 
+if ($browser->is64bitPlatform()) $OSver .= ' 64bit';
+if ($OSver === 'unknown' && strpos($binfo, 'Linux x86_64') !== false) $OSver = 'amd64';
+$OSver = str_replace('Windows', '', $OSver);
 
-if ($bot == "true") $bot = 1;
-else $bot = 0;
-
-if ($object->is64bitPlatform())
-	{ $OSver .= " 64bit"; }
-
-if ( $OSver == "unknown" && strpos($binfo, "Linux x86_64") == true )
-    { $OSver = "amd64"; }
-
-$OSver = str_replace("Windows","",$OSver);
-############################################################################ 
 $conn = mysqli_connect("localhost", "ipfordosk", "ipfordosk1", "ipfordosk");
+if (!$conn) exit;
 
-$sql = mysqli_query($conn, "SELECT COUNT(*) as pocet FROM known WHERE full = '$binfo'");
-$sql = mysqli_fetch_array($sql);
-if ( $sql['pocet'] == 0 )
-	{ mysqli_query($conn, "INSERT INTO known VALUES( NULL, '$browserName', '$browserVer', '$OS', '$OSver','$bot','$binfo')"); }
+$stmt = mysqli_prepare($conn, "SELECT COUNT(*) AS pocet FROM known WHERE full = ?");
+mysqli_stmt_bind_param($stmt, 's', $binfo);
+mysqli_stmt_execute($stmt);
+$row = mysqli_fetch_array(mysqli_stmt_get_result($stmt));
 
-
-
-
-?>
+if ($row['pocet'] == 0) {
+    $ins = mysqli_prepare($conn, "INSERT INTO known VALUES(NULL, ?, ?, ?, ?, ?, ?, ?)");
+    mysqli_stmt_bind_param($ins, 'ssssiis', $browserName, $browserVer, $OS, $OSver, $botInt, $botInt, $binfo);
+    mysqli_stmt_execute($ins);
+}
