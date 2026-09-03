@@ -47,7 +47,7 @@ if ($OSver === 'unknown') $OSver = '';
 
 // Plain-text response for command-line clients
 if (strpos($binfo, 'libwww-perl') !== false) {
-    echo "Your IP: $ip\n";
+    echo "$ip\n";
     exit;
 }
 
