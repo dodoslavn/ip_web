@@ -17,11 +17,11 @@ if (!empty($_GET['lang']) && in_array($_GET['lang'], $supported)) {
 }
 
 $strings = [
-    'en' => ['title' => 'My IP Address',    'ip' => 'IP Address',         'os' => 'Operating System', 'browser' => 'Browser',     'date' => 'Date',   'time' => 'Time',   'mobile' => 'Mobile', 'bot' => 'Bot', 'yes' => 'Yes', 'no' => 'No'],
-    'sk' => ['title' => 'Moja IP adresa',   'ip' => 'IP adresa',          'os' => 'Operačný systém',  'browser' => 'Prehliadač',  'date' => 'Dátum',  'time' => 'Čas',    'mobile' => 'Mobil',  'bot' => 'Bot', 'yes' => 'Áno', 'no' => 'Nie'],
-    'cs' => ['title' => 'Moje IP adresa',   'ip' => 'IP adresa',          'os' => 'Operační systém',  'browser' => 'Prohlížeč',   'date' => 'Datum',  'time' => 'Čas',    'mobile' => 'Mobil',  'bot' => 'Bot', 'yes' => 'Ano', 'no' => 'Ne'],
-    'de' => ['title' => 'Meine IP-Adresse', 'ip' => 'IP-Adresse',         'os' => 'Betriebssystem',   'browser' => 'Browser',     'date' => 'Datum',  'time' => 'Uhrzeit','mobile' => 'Mobil',  'bot' => 'Bot', 'yes' => 'Ja',  'no' => 'Nein'],
-    'fr' => ['title' => "Mon adresse IP",   'ip' => 'Adresse IP',         'os' => "Système d'exp.",   'browser' => 'Navigateur',  'date' => 'Date',   'time' => 'Heure',  'mobile' => 'Mobile', 'bot' => 'Bot', 'yes' => 'Oui', 'no' => 'Non'],
+    'en' => ['title' => 'My IP Address',    'ip' => 'IP Address',  'os' => 'Operating System', 'browser' => 'Browser',    'date' => 'Date',  'time' => 'Time',   'mobile' => 'Mobile', 'bot' => 'Bot', 'yes' => 'Yes', 'no' => 'No'],
+    'sk' => ['title' => 'Moja IP adresa',   'ip' => 'IP adresa',   'os' => 'Operačný systém',  'browser' => 'Prehliadač', 'date' => 'Dátum', 'time' => 'Čas',    'mobile' => 'Mobil',  'bot' => 'Bot', 'yes' => 'Áno', 'no' => 'Nie'],
+    'cs' => ['title' => 'Moje IP adresa',   'ip' => 'IP adresa',   'os' => 'Operační systém',  'browser' => 'Prohlížeč',  'date' => 'Datum', 'time' => 'Čas',    'mobile' => 'Mobil',  'bot' => 'Bot', 'yes' => 'Ano', 'no' => 'Ne'],
+    'de' => ['title' => 'Meine IP-Adresse', 'ip' => 'IP-Adresse',  'os' => 'Betriebssystem',   'browser' => 'Browser',    'date' => 'Datum', 'time' => 'Uhrzeit','mobile' => 'Mobil',  'bot' => 'Bot', 'yes' => 'Ja',  'no' => 'Nein'],
+    'fr' => ['title' => "Mon adresse IP",   'ip' => 'Adresse IP',  'os' => "Système d'exp.",   'browser' => 'Navigateur', 'date' => 'Date',  'time' => 'Heure',  'mobile' => 'Mobile', 'bot' => 'Bot', 'yes' => 'Oui', 'no' => 'Non'],
 ];
 $t = $strings[$lang];
 
@@ -44,20 +44,6 @@ $botInt      = ($isBot === 'true' || $isBot === true) ? 1 : 0;
 
 if ($browser->is64bitPlatform()) $OSver .= ' 64bit';
 if ($OSver === 'unknown') $OSver = '';
-
-// Log to DB using prepared statements
-$conn = mysqli_connect("localhost", "ipfordosk", "ipfordosk1", "ipfordosk");
-if ($conn) {
-    $stmt = mysqli_prepare($conn, "SELECT COUNT(*) AS pocet FROM known WHERE full = ?");
-    mysqli_stmt_bind_param($stmt, 's', $binfo);
-    mysqli_stmt_execute($stmt);
-    $row = mysqli_fetch_array(mysqli_stmt_get_result($stmt));
-    if ($row['pocet'] == 0) {
-        $ins = mysqli_prepare($conn, "INSERT INTO known VALUES(NULL, ?, ?, ?, ?, ?, ?, ?)");
-        mysqli_stmt_bind_param($ins, 'ssssiis', $browserName, $browserVer, $OS, $OSver, $botInt, $botInt, $binfo);
-        mysqli_stmt_execute($ins);
-    }
-}
 
 // Plain-text response for command-line clients
 if (strpos($binfo, 'libwww-perl') !== false) {
