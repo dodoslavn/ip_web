@@ -45,8 +45,9 @@ $botInt      = ($isBot === 'true' || $isBot === true) ? 1 : 0;
 if ($browser->is64bitPlatform()) $OSver .= ' 64bit';
 if ($OSver === 'unknown') $OSver = '';
 
-// Plain-text response for command-line clients
-if (strpos($binfo, 'libwww-perl') !== false) {
+// Plain-text response for command-line clients (curl, wget, GET, …)
+if (preg_match('~curl|wget|libwww-perl~i', $binfo)) {
+    header('Content-Type: text/plain; charset=utf-8');
     echo "Your IP: $ip\n";
     exit;
 }
