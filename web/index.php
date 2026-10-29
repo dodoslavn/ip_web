@@ -17,11 +17,11 @@ if (!empty($_GET['lang']) && in_array($_GET['lang'], $supported)) {
 }
 
 $strings = [
-    'en' => ['title' => 'My IP Address',    'ip' => 'IP Address',  'os' => 'Operating System', 'browser' => 'Browser',    'date' => 'Date',  'time' => 'Time',   'mobile' => 'Mobile', 'bot' => 'Bot', 'yes' => 'Yes', 'no' => 'No'],
-    'sk' => ['title' => 'Moja IP adresa',   'ip' => 'IP adresa',   'os' => 'Operačný systém',  'browser' => 'Prehliadač', 'date' => 'Dátum', 'time' => 'Čas',    'mobile' => 'Mobil',  'bot' => 'Bot', 'yes' => 'Áno', 'no' => 'Nie'],
-    'cs' => ['title' => 'Moje IP adresa',   'ip' => 'IP adresa',   'os' => 'Operační systém',  'browser' => 'Prohlížeč',  'date' => 'Datum', 'time' => 'Čas',    'mobile' => 'Mobil',  'bot' => 'Bot', 'yes' => 'Ano', 'no' => 'Ne'],
-    'de' => ['title' => 'Meine IP-Adresse', 'ip' => 'IP-Adresse',  'os' => 'Betriebssystem',   'browser' => 'Browser',    'date' => 'Datum', 'time' => 'Uhrzeit','mobile' => 'Mobil',  'bot' => 'Bot', 'yes' => 'Ja',  'no' => 'Nein'],
-    'fr' => ['title' => "Mon adresse IP",   'ip' => 'Adresse IP',  'os' => "Système d'exp.",   'browser' => 'Navigateur', 'date' => 'Date',  'time' => 'Heure',  'mobile' => 'Mobile', 'bot' => 'Bot', 'yes' => 'Oui', 'no' => 'Non'],
+    'en' => ['title' => 'My IP Address',    'ip' => 'IP Address',  'os' => 'Operating System', 'browser' => 'Browser',    'mobile' => 'Mobile', 'bot' => 'Bot', 'yes' => 'Yes', 'no' => 'No'],
+    'sk' => ['title' => 'Moja IP adresa',   'ip' => 'IP adresa',   'os' => 'Operačný systém',  'browser' => 'Prehliadač', 'mobile' => 'Mobil',  'bot' => 'Bot', 'yes' => 'Áno', 'no' => 'Nie'],
+    'cs' => ['title' => 'Moje IP adresa',   'ip' => 'IP adresa',   'os' => 'Operační systém',  'browser' => 'Prohlížeč',  'mobile' => 'Mobil',  'bot' => 'Bot', 'yes' => 'Ano', 'no' => 'Ne'],
+    'de' => ['title' => 'Meine IP-Adresse', 'ip' => 'IP-Adresse',  'os' => 'Betriebssystem',   'browser' => 'Browser',    'mobile' => 'Mobil',  'bot' => 'Bot', 'yes' => 'Ja',  'no' => 'Nein'],
+    'fr' => ['title' => "Mon adresse IP",   'ip' => 'Adresse IP',  'os' => "Système d'exp.",   'browser' => 'Navigateur', 'mobile' => 'Mobile', 'bot' => 'Bot', 'yes' => 'Oui', 'no' => 'Non'],
 ];
 $t = $strings[$lang];
 
@@ -45,6 +45,22 @@ $botInt      = ($isBot === 'true' || $isBot === true) ? 1 : 0;
 if ($browser->is64bitPlatform()) $OSver .= ' 64bit';
 if ($OSver === 'unknown') $OSver = '';
 
+// JSON response when the client asks for it via Accept: application/json
+$wantsJson = stripos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false;
+
+if ($wantsJson) {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode([
+        'ip'         => $ip,
+        'os'         => trim("$OS $OSver") ?: null,
+        'browser'    => trim("$browserName $browserVer") ?: null,
+        'mobile'     => (bool) $isMobile,
+        'bot'        => (bool) $botInt,
+        'user_agent' => $binfo,
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n";
+    exit;
+}
+
 // Plain-text response for command-line clients (curl, wget, GET, …)
 if (preg_match('~curl|wget|libwww-perl~i', $binfo)) {
     header('Content-Type: text/plain; charset=utf-8');
@@ -52,8 +68,6 @@ if (preg_match('~curl|wget|libwww-perl~i', $binfo)) {
     exit;
 }
 
-$datum     = date('d.m.Y');
-$timeStr   = date('H:i');
 $osDisplay = trim("$OS $OSver");
 ?>
 <!DOCTYPE html>
@@ -204,14 +218,6 @@ $osDisplay = trim("$OS $OSver");
       <div class="info-row">
         <span class="info-key"><?= $t['browser'] ?></span>
         <span class="info-val"><?= htmlspecialchars("$browserName $browserVer") ?></span>
-      </div>
-      <div class="info-row">
-        <span class="info-key"><?= $t['date'] ?></span>
-        <span class="info-val"><?= htmlspecialchars($datum) ?></span>
-      </div>
-      <div class="info-row">
-        <span class="info-key"><?= $t['time'] ?></span>
-        <span class="info-val"><?= htmlspecialchars($timeStr) ?></span>
       </div>
       <div class="info-row">
         <span class="info-key"><?= $t['mobile'] ?></span>
